@@ -45,7 +45,7 @@ static void GPIO_Button_Init(void)
     pinMode(IO_BUTTON_3, INPUT_MODE);
 }
 
-void Button_Readall(void)
+void GPIO_Button_ReadAll(void)
 {
     GPIO_Button_Read(BT1_READ, (gpio_ButtonState_t *)(&button_1));
     GPIO_Button_Read(BT2_READ, (gpio_ButtonState_t *)(&button_2));
