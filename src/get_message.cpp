@@ -60,7 +60,7 @@ void Time_Out_Get_Message(void)
    @param datain : One byte data receive
    @param arr_message : Array data out of message
 */
-void BTS_Get_Message(uint8_t datain, uint8_t arr_message[])
+void Get_Message(uint8_t datain, uint8_t arr_message[])
 {
     timeout_wait = TRUE;
     timeout_start = 0;
@@ -114,4 +114,11 @@ void ClearState(void)
     timeout_start = 0;
     timeout_wait = FALSE;
     fsm_state = FSM_STATE_START;
+}
+
+void Get_MessageConfigWifi(const messageFrameMsg_t datain)
+{
+    wifiConfigData_t *wifi_config_data;
+    wifi_config_data = (wifiConfigData_t*)datain.Data;
+    DB_DEBUG("SSID: %s, PASS: %s, TimeOut: %d \n", wifi_config_data->wifi_ssid, wifi_config_data->wifi_pass, wifi_config_data->wifi_timeout);
 }

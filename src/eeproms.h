@@ -1,7 +1,7 @@
 #ifndef LIB_EEPROM_h
 #define LIB_EEPROM_h
-#include "define.h"
 
+#include "define.h"
 
 #define EEPROM_SIZE     500
 #define EEPROM_ADDRESS  10
@@ -16,6 +16,7 @@ typedef struct
     uint16_t servo3_down;
     uint16_t servo4_up;
     uint16_t servo4_down;
+    uint16_t wifi_timeout;
     char wifi_ssid[32];
     char wifi_pass[32];
 }eepromDataStruct_t;
@@ -31,6 +32,9 @@ uint8_t EEPROM_Read(uint8_t *arr);
 
 uint8_t EEPROM_WriteStruct(const eepromDataStruct_t *data_struct);
 uint8_t EEPROM_ReadStruct(eepromDataStruct_t *data_struct);
+
+uint8_t EEPROM_WriteConfig(void);
+uint8_t EEPROM_ReadConfig(void);
 
 #endif
 

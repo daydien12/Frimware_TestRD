@@ -1,10 +1,17 @@
 
 #include "define.h"
+#include "wifis.h"
+#include "gpio.h"
+#include "conver.h"
+#include "eeproms.h"
+#include "get_message.h"
+#include "frame_message.h"
 
-uint16_t lenght = 0;
+uint16_t lenght = 0, count_time_1ms = 0;
 hw_timer_t *my_timer = NULL;
 uint8_t arr_receive[string_size];
 
+uint8_t flag_wifi_connect = 0;
 static void TIMER_Init(void);
 static void Create_MSGTest(void);
 
@@ -13,34 +20,44 @@ void setup()
   GPIO_Init();
   EEPROM_Init();
   Serial.begin(115200);
-  // Create_MSGTest();
-  //EEPROM_TestWrite();
+
+  // EEPROM_TestWrite();
   EEPROM_TestRead();
   delay(1000);
-  WIFI_Connect();
-  
+  flag_wifi_connect = WIFI_Connect();
   TIMER_Init();
+
+  Create_MSGTest();
 }
 
 void loop()
 {
   if (Serial.available() > 0)
   {
-    BTS_Get_Message(Serial.read(), arr_receive);
+    Get_Message(Serial.read(), arr_receive);
   }
 
-  if (Is_Message(&lenght) != 0)
+  if (count_time_1ms >= 1000)
   {
-    if (lenght > 0)
+    if (Is_Message(&lenght) != 0)
     {
-      messageFrameMsg_t dataout;
-      printf("\n-(Size    : %d)-\n", DetectMessage(arr_receive, &dataout));
-      DebugMessage(arr_receive);
-      ESP.restart();
+      if (lenght > 0)
+      {
+        messageFrameMsg_t dataout;
+        printf("\n-(Size    : %d)-\n", DetectMessage(arr_receive, &dataout));
+        DebugMessage(arr_receive);
+        //Get_MessageConfigWifi(dataout);
+        // ESP.restart();
+      }
     }
+    count_time_1ms = 0;
+  }
+  else
+  {
+    count_time_1ms += 1;
   }
 
-  delay(1);
+  delayMicroseconds(1);
 }
 
 void IRAM_ATTR Timer_Handle()
@@ -60,13 +77,27 @@ void TIMER_Init(void)
 static void Create_MSGTest(void)
 {
   delay(2000);
-  uint8_t arr_in[2] = {1, 2}, arr_out[20], length_arr;
-  length_arr = CreateMessage(TYPE_MSG_UPDATE_WIFI, 2, arr_in, arr_out);
+
+  uint8_t lenth_ssid = strlen("Ai-Photonic 2G");
+  uint8_t lenth_pass = strlen("ptitlab@123");
+
+  uint8_t arr_out[200], length_arr;
+  wifiConfigData_t data, *data_temp;
+  data.wifi_timeout = 20;
+  memcpy(data.wifi_ssid, "Ai-Photonic 2G", lenth_ssid);
+  memcpy(data.wifi_pass, "ptitlab@123",    lenth_pass);
+
+  data.wifi_ssid[lenth_ssid] = 0;
+  data.wifi_pass[lenth_pass] = 0;
+
+  data_temp = &data;
+  length_arr = CreateMessage(TYPE_MSG_UPDATE_WIFI, sizeof(wifiConfigData_t), (uint8_t *)data_temp, arr_out);
   Serial.println(length_arr);
-  for (int i = 0; i < length_arr; i++)
+  DB_DEBUG("%s %s", data.wifi_ssid,  data.wifi_pass);
+  for (int i = 0; i < sizeof(wifiConfigData_t); i++)
   {
-    char buff[10];
-    if (arr_out[i] < 10)
+    char buff[5];
+    if (arr_out[i] < 15)
     {
       sprintf(buff, "0%x", arr_out[i]);
     }
@@ -74,8 +105,8 @@ static void Create_MSGTest(void)
     {
       sprintf(buff, "%x", arr_out[i]);
     }
-
     Serial.print(buff);
     Serial.print(" ");
+    delay(10);
   }
 }

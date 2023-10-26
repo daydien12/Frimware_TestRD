@@ -1,6 +1,8 @@
 #ifndef LIB_FRAME_MSG_h
 #define LIB_FRAME_MSG_h
+
 #include "define.h"
+#include "conver.h"
 
 #define RETRUN_ERROR -1
 
@@ -30,5 +32,6 @@ int16_t DetectMessage(uint8_t *dataint, messageFrameMsg_t *dataout);
 int16_t CreateMessage(uint8_t type_msg, uint16_t length, uint8_t *datain, uint8_t *dataout);
 
 int16_t DebugMessage(uint8_t *dataint);
+
 
 #endif

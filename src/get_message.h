@@ -1,6 +1,9 @@
 #ifndef LIB_GET_MSG_h
 #define LIB_GET_MSG_h
+//#include "define.h"
+
 #include "define.h"
+#include "frame_message.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -22,7 +25,15 @@ typedef enum
 
 extern int32_t timeout_wait;
 
-uint16_t Is_Message(uint16_t *lenght);
-void BTS_Get_Message(uint8_t datain, uint8_t arr_message[]);
+typedef struct
+{
+    uint16_t wifi_timeout;
+    char wifi_ssid[32];
+    char wifi_pass[32];
+} wifiConfigData_t;
 
+uint16_t Is_Message(uint16_t *lenght);
+void Get_Message(uint8_t datain, uint8_t arr_message[]);
+
+void Get_MessageConfigWifi(messageFrameMsg_t datain);
 #endif

@@ -6,7 +6,7 @@ void EEPROM_Init(void)
 {
   if (!EEPROM.begin(EEPROM_SIZE))
   {
-    Serial.println("failed to initialise EEPROM");
+    DB_ERROR("failed to initialise EEPROM\n");
   }
 }
 
@@ -21,7 +21,6 @@ uint8_t EEPROM_WriteStruct(const eepromDataStruct_t *data_struct)
     EEPROM.commit();
     address += 1;
   }
-
   return 1;
 }
 
@@ -45,10 +44,9 @@ uint8_t EEPROM_ReadStruct(eepromDataStruct_t *data_struct)
   data_struct->servo3_down = data_temp->servo3_down;
   data_struct->servo4_up = data_temp->servo4_up;
   data_struct->servo4_down = data_temp->servo4_down;
-
-  memcpy(data_struct->wifi_ssid, data_temp->wifi_ssid, sizeof(data_temp->wifi_ssid)+1);
-  memcpy(data_struct->wifi_pass, data_temp->wifi_pass, sizeof(data_temp->wifi_pass)+1);
-
+  data_struct->wifi_timeout = data_temp->wifi_timeout;
+  memcpy(data_struct->wifi_ssid, data_temp->wifi_ssid, strlen(data_temp->wifi_ssid) + 1);
+  memcpy(data_struct->wifi_pass, data_temp->wifi_pass, strlen(data_temp->wifi_pass) + 1);
   return 1;
 }
 
@@ -91,8 +89,10 @@ void EEPROM_TestWrite(void)
   data_in.servo4_up = 50;
   data_in.servo4_down = 14;
 
-  memcpy(data_in.wifi_ssid, "P702_2G", sizeof("P702_2G")+1);
-  memcpy(data_in.wifi_pass, "nhanma25", sizeof("nhanma25")+1);
+  data_in.wifi_timeout = 10 * 10; // 50*100 = 5 seconds
+
+  memcpy(data_in.wifi_ssid, "Ai-Photonic 2G", strlen("Ai-photonic 2G") + 1);
+  memcpy(data_in.wifi_pass, "ptitlab@123", strlen("ptitlab@123") + 1);
   EEPROM_WriteStruct(&data_in);
 }
 
@@ -113,4 +113,12 @@ void EEPROM_TestRead(void)
 
   Serial.println(eeprom_data.wifi_ssid);
   Serial.println(eeprom_data.wifi_pass);
+  Serial.println(eeprom_data.wifi_timeout);
+}
+
+uint8_t EEPROM_WriteConfig(void)
+{
+}
+uint8_t EEPROM_ReadConfig(void)
+{
 }
