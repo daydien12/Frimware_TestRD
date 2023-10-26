@@ -118,7 +118,55 @@ void ClearState(void)
 
 void Get_MessageConfigWifi(const messageFrameMsg_t datain)
 {
+    EEPROM_ReadStruct(&eeprom_data);
     wifiConfigData_t *wifi_config_data;
-    wifi_config_data = (wifiConfigData_t*)datain.Data;
-    DB_DEBUG("SSID: %s, PASS: %s, TimeOut: %d \n", wifi_config_data->wifi_ssid, wifi_config_data->wifi_pass, wifi_config_data->wifi_timeout);
+    wifi_config_data = (wifiConfigData_t *)datain.Data;
+    for (int j = 0; j < sizeof(eeprom_data.wifi_ssid); j++)
+    {
+        eeprom_data.wifi_ssid[j] = 0;
+        eeprom_data.wifi_pass[j] = 0;
+    }
+    eeprom_data.wifi_timeout = wifi_config_data->wifi_timeout;
+    memcpy(eeprom_data.wifi_ssid, wifi_config_data->wifi_ssid, strlen(wifi_config_data->wifi_ssid));
+    memcpy(eeprom_data.wifi_pass, wifi_config_data->wifi_pass, strlen(wifi_config_data->wifi_pass));
+    EEPROM_WriteStruct(&eeprom_data);
+#if DB_GET_MESSAGE
+    DB_DEBUG("(Get_MSG) SSID: %s, PASS: %s, TimeOut: %d \n", wifi_config_data->wifi_ssid, wifi_config_data->wifi_pass, wifi_config_data->wifi_timeout);
+#endif
+}
+
+void Get_MessageConfigServo(messageFrameMsg_t datain)
+{
+    EEPROM_ReadStruct(&eeprom_data);
+    servoConfigData_t *servo_config_data;
+    servo_config_data = (servoConfigData_t *)datain.Data;
+
+    eeprom_data.servo1_up = servo_config_data->servo1_up;
+    eeprom_data.servo1_down = servo_config_data->servo1_down;
+    eeprom_data.servo2_up = servo_config_data->servo2_up;
+    eeprom_data.servo2_down = servo_config_data->servo2_down;
+    eeprom_data.servo3_up = servo_config_data->servo3_up;
+    eeprom_data.servo3_down = servo_config_data->servo3_down;
+    eeprom_data.servo4_up = servo_config_data->servo4_up;
+    eeprom_data.servo4_down = servo_config_data->servo4_down;
+    EEPROM_WriteStruct(&eeprom_data);
+#if DB_GET_MESSAGE
+    DB_DEBUG("(Get_MSG) SV1: UP(%d) - DOWN(%d)\n", servo_config_data->servo1_up, servo_config_data->servo1_down);
+    DB_DEBUG("(Get_MSG) SV2: UP(%d) - DOWN(%d)\n", servo_config_data->servo2_up, servo_config_data->servo2_down);
+    DB_DEBUG("(Get_MSG) SV3: UP(%d) - DOWN(%d)\n", servo_config_data->servo3_up, servo_config_data->servo3_down);
+    DB_DEBUG("(Get_MSG) SV4: UP(%d) - DOWN(%d)\n", servo_config_data->servo4_up, servo_config_data->servo4_down);
+#endif
+}
+
+void Get_MessageControlServo(messageFrameMsg_t datain, servoControlData_t *dataout)
+{
+    servoControlData_t *servo_control_data;
+    servo_control_data = (servoControlData_t *)datain.Data;
+    dataout->servo1_control = servo_control_data->servo1_control;
+    dataout->servo2_control = servo_control_data->servo2_control;
+    dataout->servo3_control = servo_control_data->servo3_control;
+    dataout->servo4_control = servo_control_data->servo4_control;
+#if DB_GET_MESSAGE
+    DB_DEBUG("(Get_MSG) SV1: %d, SV2: %d, SV3: %d, SV4: %d \n", servo_control_data->servo1_control, servo_control_data->servo2_control, servo_control_data->servo3_control, servo_control_data->servo4_control);
+#endif
 }

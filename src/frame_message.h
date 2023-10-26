@@ -26,12 +26,13 @@ typedef struct
 typedef enum
 {
     TYPE_MSG_UPDATE_WIFI = 0x01,
+    TYPE_MSG_UPDATE_SERVO = 0x02,
+    TYPE_MSG_CONTROL_SERVO = 0x03,
 } typeMessage_e;
 
 int16_t DetectMessage(uint8_t *dataint, messageFrameMsg_t *dataout);
 int16_t CreateMessage(uint8_t type_msg, uint16_t length, uint8_t *datain, uint8_t *dataout);
 
 int16_t DebugMessage(uint8_t *dataint);
-
 
 #endif
