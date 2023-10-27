@@ -119,6 +119,7 @@ void EEPROM_TestRead(void)
 uint8_t EEPROM_WriteConfig(void)
 {
 }
+
 uint8_t EEPROM_ReadConfig(void)
 {
 }

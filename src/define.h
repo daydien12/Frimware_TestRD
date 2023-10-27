@@ -1,10 +1,12 @@
 #ifndef LIB_DEFINE_h
 #define LIB_DEFINE_h
 
+#include <PubSubClient.h>
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <WiFi.h>
 #include <time.h>
+
 #define SERVO_CONTROL_UP 1
 #define SERVO_CONTROL_DOWN 0
 #define string_size 500

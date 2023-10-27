@@ -2,6 +2,7 @@
 #include "define.h"
 #include "wifis.h"
 #include "gpio.h"
+#include "mqtts.h"
 #include "conver.h"
 #include "eeproms.h"
 #include "get_message.h"
@@ -18,6 +19,8 @@ int8_t flag_wifi_connect = 0;
 static void TIMER_Init(void);
 static void Create_MSGTest(void);
 
+void callback(char *topic, byte *payload, unsigned int length);
+
 void setup()
 {
   GPIO_Init();
@@ -29,9 +32,10 @@ void setup()
   if (flag_wifi_connect != DB_FUNC_ERROR)
   {
     WIFI_Ota_Init();
+    MQTT_Init(callback);
   }
   TIMER_Init();
-  Create_MSGTest();
+  // Create_MSGTest();
 }
 
 void loop()
@@ -54,7 +58,7 @@ void loop()
         {
           Get_MessageConfigWifi(dataout);
           delay(1000);
-         ESP.restart();
+          ESP.restart();
         }
         else if (dataout.TypeMessage == TYPE_MSG_UPDATE_SERVO)
         {
@@ -70,14 +74,17 @@ void loop()
         EEPROM_TestRead();
       }
     }
-    WIFI_Ota_Run();
+    if (flag_wifi_connect != DB_FUNC_ERROR)
+    {
+      MQTT_Run();
+      WIFI_Ota_Run();
+    }
     count_time_1ms = 0;
   }
   else
   {
     count_time_1ms += 1;
   }
-
   delayMicroseconds(1);
 }
 
@@ -212,6 +219,6 @@ static void Create_MSGTest(void)
   }
 #endif
 }
-// ESP.restart();
 
-//C:\Users\nhanma\Documents\github\Frimware_TestRD\.pio\build\esp32doit-devkit-v1
+// ESP.restart();
+// C:\Users\nhanma\Documents\github\Frimware_TestRD\.pio\build\esp32doit-devkit-v1
