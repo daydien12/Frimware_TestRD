@@ -2,6 +2,7 @@
 #define LIB_DEFINE_h
 
 #include <PubSubClient.h>
+#include <ESP32Servo.h>
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <WiFi.h>

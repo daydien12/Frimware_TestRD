@@ -42,8 +42,9 @@ extern gpio_ButtonState_t	button_1, button_2, button_3;
 
 
 void GPIO_Init(void);
-void GPIO_Led_Control(uint8_t led_pin, uint8_t led_mode);
 void GPIO_Button_ReadAll(void);
+void GPIO_Led_Control(uint8_t led_pin, uint8_t led_mode);
 
+void GPIO_ServoSet(uint8_t servo_mode, uint8_t degrees);
 #endif
 

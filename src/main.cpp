@@ -25,16 +25,26 @@ void setup()
 {
   GPIO_Init();
   EEPROM_Init();
-  Serial.begin(115200);
-  EEPROM_TestRead();
+  // Serial.begin(115200);
+  // EEPROM_TestRead();
+  // delay(1000);
+  // flag_wifi_connect = WIFI_Connect();
+  // if (flag_wifi_connect != DB_FUNC_ERROR)
+  // {
+  //   WIFI_Ota_Init();
+  //   MQTT_Init(callback);
+  // }
+  // TIMER_Init();
+  GPIO_ServoSet(1, 50);
+  GPIO_ServoSet(2, 100);
+  GPIO_ServoSet(3, 150);
+  GPIO_ServoSet(4, 0);
   delay(1000);
-  flag_wifi_connect = WIFI_Connect();
-  if (flag_wifi_connect != DB_FUNC_ERROR)
-  {
-    WIFI_Ota_Init();
-    MQTT_Init(callback);
-  }
-  TIMER_Init();
+  GPIO_ServoSet(1, 0);
+  GPIO_ServoSet(2, 150);
+  GPIO_ServoSet(3, 100);
+  GPIO_ServoSet(4, 50);
+  delay(1000);
   // Create_MSGTest();
 }
 
@@ -91,6 +101,18 @@ void loop()
 void IRAM_ATTR Timer_Handle()
 {
   GPIO_Button_ReadAll();
+}
+
+void callback(char *topic, byte *payload, unsigned int length)
+{
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++)
+  {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
 }
 
 void TIMER_Init(void)
