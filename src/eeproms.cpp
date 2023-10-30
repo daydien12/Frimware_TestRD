@@ -47,6 +47,11 @@ uint8_t EEPROM_ReadStruct(eepromDataStruct_t *data_struct)
   data_struct->wifi_timeout = data_temp->wifi_timeout;
   memcpy(data_struct->wifi_ssid, data_temp->wifi_ssid, strlen(data_temp->wifi_ssid) + 1);
   memcpy(data_struct->wifi_pass, data_temp->wifi_pass, strlen(data_temp->wifi_pass) + 1);
+
+  data_struct->mqtt_port = data_temp->mqtt_port;
+  memcpy(data_struct->mqtt_broker, data_temp->mqtt_broker, strlen(data_temp->mqtt_broker) + 1);
+  memcpy(data_struct->mqtt_username, data_temp->mqtt_username, strlen(data_temp->mqtt_username) + 1);
+  memcpy(data_struct->mqtt_password, data_temp->mqtt_password, strlen(data_temp->mqtt_password) + 1);
   return 1;
 }
 
@@ -77,22 +82,28 @@ void EEPROM_TestWrite(void)
 {
   eepromDataStruct_t data_in;
 
-  data_in.servo1_up = 20;
-  data_in.servo1_down = 11;
+  data_in.servo1_up = 180;
+  data_in.servo1_down = 180;
 
-  data_in.servo2_up = 30;
-  data_in.servo2_down = 12;
+  data_in.servo2_up = 180;
+  data_in.servo2_down = 180;
 
-  data_in.servo3_up = 40;
-  data_in.servo3_down = 13;
+  data_in.servo3_up = 180;
+  data_in.servo3_down = 180;
 
-  data_in.servo4_up = 50;
-  data_in.servo4_down = 14;
+  data_in.servo4_up = 180;
+  data_in.servo4_down = 180;
 
   data_in.wifi_timeout = 10 * 10; // 50*100 = 5 seconds
 
   memcpy(data_in.wifi_ssid, "Ai-Photonic 2G", strlen("Ai-photonic 2G") + 1);
   memcpy(data_in.wifi_pass, "ptitlab@123", strlen("ptitlab@123") + 1);
+
+  data_in.mqtt_port = 1883;
+  memcpy(data_in.mqtt_broker, "Mqtt.mysignage.vn", strlen("Mqtt.mysignage.vn") + 1);
+  memcpy(data_in.mqtt_username, "admin", strlen("admin") + 1);
+  memcpy(data_in.mqtt_password, "admin", strlen("admin") + 1);
+
   EEPROM_WriteStruct(&data_in);
 }
 
@@ -114,6 +125,11 @@ void EEPROM_TestRead(void)
   Serial.println(eeprom_data.wifi_ssid);
   Serial.println(eeprom_data.wifi_pass);
   Serial.println(eeprom_data.wifi_timeout);
+
+  Serial.println(eeprom_data.mqtt_port);
+  Serial.println(eeprom_data.mqtt_broker);
+  Serial.println(eeprom_data.mqtt_username);
+  Serial.println(eeprom_data.mqtt_password);
 }
 
 uint8_t EEPROM_WriteConfig(void)

@@ -16,9 +16,15 @@ typedef struct
     uint16_t servo3_down;
     uint16_t servo4_up;
     uint16_t servo4_down;
+
     uint16_t wifi_timeout;
     char wifi_ssid[32];
     char wifi_pass[32];
+
+    uint16_t mqtt_port;
+    char mqtt_broker[32];
+    char mqtt_username[32];
+    char mqtt_password[32];	
 }eepromDataStruct_t;
 
 extern eepromDataStruct_t eeprom_data;

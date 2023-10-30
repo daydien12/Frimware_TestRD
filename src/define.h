@@ -2,6 +2,7 @@
 #define LIB_DEFINE_h
 
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 #include <ESP32Servo.h>
 #include <Arduino.h>
 #include <EEPROM.h>
