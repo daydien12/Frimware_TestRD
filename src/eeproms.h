@@ -8,6 +8,7 @@
 
 typedef struct 
 {
+    uint16_t create_data; 
     uint16_t servo1_up;
     uint16_t servo1_down;
     uint16_t servo2_up;
@@ -30,7 +31,7 @@ typedef struct
 extern eepromDataStruct_t eeprom_data;
 
 void EEPROM_Init(void);
-void EEPROM_TestWrite(void);
+void EEPROM_CreateEeprom(void);
 void EEPROM_TestRead(void);
 
 uint8_t EEPROM_Write(uint8_t *arr);

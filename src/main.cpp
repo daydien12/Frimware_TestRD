@@ -27,8 +27,13 @@ void setup()
   EEPROM_Init();
   Serial.begin(115200);
   delay(1000);
-  // EEPROM_TestWrite();
   EEPROM_TestRead();
+  if (eeprom_data.create_data != 123)
+  {
+    EEPROM_CreateEeprom();
+    delay(500);
+    EEPROM_TestRead();
+  }
   delay(1000);
   flag_wifi_connect = WIFI_Connect();
   if (flag_wifi_connect != DB_FUNC_ERROR)
@@ -86,6 +91,90 @@ void loop()
   {
     count_time_1ms += 1;
   }
+
+  if (mqtt_switch_press.flag == true)
+  {
+    mqtt_switch_press.flag = false;
+    if (mqtt_switch_press.servo[0] == 1)
+    {
+
+      GPIO_ServoInitValue(servo1_value);
+      servo1_value.flag = 1;
+      servo1_value.servo_numbers = 1;
+      servo1_value.keep = mqtt_switch_press.keep;
+      servo1_value.time = mqtt_switch_press.time;
+      servo1_value.wait = mqtt_switch_press.wait;
+    }
+
+    if (mqtt_switch_press.servo[1] == 1)
+    {
+      GPIO_ServoInitValue(servo2_value);
+      servo2_value.flag = 1;
+      servo2_value.servo_numbers = 2;
+      servo2_value.keep = mqtt_switch_press.keep;
+      servo2_value.time = mqtt_switch_press.time;
+      servo2_value.wait = mqtt_switch_press.wait;
+    }
+
+    if (mqtt_switch_press.servo[2] == 1)
+    {
+      GPIO_ServoInitValue(servo3_value);
+      servo3_value.flag = 1;
+      servo3_value.servo_numbers = 3;
+      servo3_value.keep = mqtt_switch_press.keep;
+      servo3_value.time = mqtt_switch_press.time;
+      servo3_value.wait = mqtt_switch_press.wait;
+    }
+
+    if (mqtt_switch_press.servo[3] == 1)
+    {
+      GPIO_ServoInitValue(servo4_value);
+      servo4_value.flag = 1;
+      servo4_value.servo_numbers = 4;
+      servo4_value.keep = mqtt_switch_press.keep;
+      servo4_value.time = mqtt_switch_press.time;
+      servo4_value.wait = mqtt_switch_press.wait;
+    }
+
+    DB_DEBUG("(MAIN.c) Servo: %d, %d, %d, %d\n", mqtt_switch_press.servo[0], mqtt_switch_press.servo[1], mqtt_switch_press.servo[2], mqtt_switch_press.servo[3]);
+    DB_DEBUG("(MAIN.c) Time: %d, wait: %d, keep: %d,\n", mqtt_switch_press.time, mqtt_switch_press.wait, mqtt_switch_press.keep);
+  }
+
+  if (mqtt_switch_power.flag == true)
+  {
+    mqtt_switch_power.flag = false;
+    DB_DEBUG("(MAIN.c) Status: %d,\n", mqtt_switch_power.status);
+  }
+
+  if (mqtt_switch_type.flag == true)
+  {
+    mqtt_switch_type.flag = false;
+    DB_DEBUG("(MAIN.c) Type: %d,\n", mqtt_switch_type.type);
+  }
+
+  if (mqtt_switch_pinout.flag == true)
+  {
+    mqtt_switch_pinout.flag = false;
+    DB_DEBUG("(MAIN.c) Pinout: %d, %d, %d, %d\n", mqtt_switch_pinout.pinout[0], mqtt_switch_pinout.pinout[1], mqtt_switch_pinout.pinout[2], mqtt_switch_pinout.pinout[3]);
+  }
+
+  if (mqtt_flag_config == true)
+  {
+    Serial.println(eeprom_data.wifi_ssid);
+    Serial.println(eeprom_data.wifi_pass);
+    Serial.println(eeprom_data.mqtt_port);
+    Serial.println(eeprom_data.mqtt_broker);
+    Serial.println(eeprom_data.mqtt_username);
+    Serial.println(eeprom_data.mqtt_password);
+    EEPROM_WriteStruct(&eeprom_data);
+    mqtt_flag_config = false;
+    delay(1000);
+    ESP.restart();
+  }
+  GPIO_ServoRun(servo1_value);
+  GPIO_ServoRun(servo2_value);
+  GPIO_ServoRun(servo3_value);
+  GPIO_ServoRun(servo4_value);
   delayMicroseconds(1);
 }
 
@@ -106,7 +195,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     buffer[i] = payload[i];
   }
   Serial.println();
-  MQTT_Receive(buffer);
+  MQTT_Receive(buffer, topic);
 }
 
 void TIMER_Init(void)

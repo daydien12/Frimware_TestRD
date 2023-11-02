@@ -36,6 +36,7 @@ uint8_t EEPROM_ReadStruct(eepromDataStruct_t *data_struct)
   }
   data_temp = (eepromDataStruct_t *)arr_temp;
 
+  data_struct->create_data = data_temp->create_data;
   data_struct->servo1_up = data_temp->servo1_up;
   data_struct->servo1_down = data_temp->servo1_down;
   data_struct->servo2_up = data_temp->servo2_up;
@@ -78,10 +79,10 @@ uint8_t EEPROM_Read(uint8_t *arr)
   return 1;
 }
 
-void EEPROM_TestWrite(void)
+void EEPROM_CreateEeprom(void)
 {
   eepromDataStruct_t data_in;
-
+  data_in.create_data = 123;
   data_in.servo1_up = 180;
   data_in.servo1_down = 180;
 
@@ -110,6 +111,9 @@ void EEPROM_TestWrite(void)
 void EEPROM_TestRead(void)
 {
   EEPROM_ReadStruct(&eeprom_data);
+
+  Serial.println(eeprom_data.create_data);
+
   Serial.println(eeprom_data.servo1_up);
   Serial.println(eeprom_data.servo1_down);
 

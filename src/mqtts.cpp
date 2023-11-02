@@ -4,6 +4,9 @@
 // const char *mqtt_username = "admin";
 // const char *mqtt_password = "admin";
 // const int mqtt_port = 1883;
+/*client\switch*/
+/*client\wireless*/
+
 const char *topic = "topic1";
 const char *topic_sub_switch = "host\\switch";
 const char *topic_pub_switch = "client\\switch";
@@ -12,6 +15,29 @@ const char *topic_sub_wireless = "host\\wireless";
 const char *topic_pub_wireless = "client\\wireless";
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+bool mqtt_flag_config = false;
+mqttSwitchPress_t mqtt_switch_press;
+mqttSwitchPower_t mqtt_switch_power;
+mqttSwitchType_t mqtt_switch_type;
+mqttSwitchPinout_t mqtt_switch_pinout;
+
+/*switch sub*/
+static void MQTT_GetMsgPress(JsonDocument &doc);
+static void MQTT_GetMsgPower(JsonDocument &doc);
+static void MQTT_GetMsgType(JsonDocument &doc);
+static void MQTT_GetMsgPinout(JsonDocument &doc);
+/*switch pub*/
+static void MQTT_Response_Switch(uint8_t switch_id, char *cmd);
+static void MQTT_Response_OutputSwitch(uint8_t switch_id, uint8_t out1, uint8_t out2, uint8_t out3, uint8_t out4);
+
+/*switch sub*/
+static void MQTT_GetInfoWireless(JsonDocument &doc);
+static void MQTT_SetConfigWireless(JsonDocument &doc);
+
+/*wireless pub*/
+static void MQTT_Response_GetInfoWireless(uint8_t switch_id);
+static void MQTT_Response_SetConfigWireless(uint8_t switch_id);
 
 static void MQTT_Reconnect(void)
 {
@@ -31,16 +57,6 @@ static void MQTT_Reconnect(void)
             // ... and resubscribe
             client.subscribe(topic_sub_switch);
             client.subscribe(topic_sub_wireless);
-            // MQTT_Response_GetInfoWireless(5);
-            // delay(1000);
-            // MQTT_Response_SetConfigWireless(3);
-            // delay(1000);
-            // MQTT_Response_PowerSwitch(1);
-            // delay(1000);
-            // MQTT_Response_OutputSwitch(2, 1, 1, 1, 0);
-            // delay(1000);
-            // MQTT_Response_PressSwitch(3);
-            // delay(1000);
         }
         else
         {
@@ -68,23 +84,12 @@ void MQTT_Run(void)
     client.loop();
 }
 
-void MQTT_Response_PowerSwitch(uint8_t switch_id)
+void MQTT_Response_Switch(uint8_t switch_id, char *cmd)
 {
     StaticJsonDocument<100> doc;
     char jsonChar[100];
     doc["switch"] = switch_id;
-    doc["cmd"] = "power";
-    // serializeJson(doc, Serial);
-    serializeJson(doc, jsonChar);
-    client.publish(topic_pub_switch, jsonChar);
-}
-
-void MQTT_Response_PressSwitch(uint8_t switch_id)
-{
-    StaticJsonDocument<100> doc;
-    char jsonChar[100];
-    doc["switch"] = switch_id;
-    doc["cmd"] = "press";
+    doc["cmd"] = cmd;
     // serializeJson(doc, Serial);
     serializeJson(doc, jsonChar);
     client.publish(topic_pub_switch, jsonChar);
@@ -134,36 +139,138 @@ void MQTT_Response_GetInfoWireless(uint8_t switch_id)
     doc["password"] = eeprom_data.mqtt_password;
     sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
     doc["ip"] = ip;
-    serializeJson(doc, Serial);
+    //serializeJsonPretty(doc, Serial);
     serializeJson(doc, jsonChar);
     client.publish(topic_pub_wireless, jsonChar);
 }
 
-void MQTT_Receive(char *datain)
+void MQTT_Receive(char *datain, char *topic)
 {
     StaticJsonDocument<300> doc;
     DeserializationError error = deserializeJson(doc, datain);
-    // // Test if parsing succeeds.
+
     if (error)
     {
         Serial.print(F("deserializeJson() failed: "));
         Serial.println(error.f_str());
         return;
     }
-    int sensor = doc["switch"];
+
+    int switch_number = doc["switch"];
     String cmd = doc["cmd"];
-    if (cmd == "press")
+    String topic_value = String(topic);
+    if (topic_value == String(topic_sub_switch))
     {
-        MQTT_Response_PressSwitch(1);
-        DB_DEBUG("Press");
+        if (cmd == "press")
+        {
+            MQTT_GetMsgPress(doc);
+            MQTT_Response_Switch(1, "press");
+            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Press\n", topic_pub_switch);
+        }
+        else if (cmd == "power")
+        {
+            MQTT_GetMsgPower(doc);
+            MQTT_Response_Switch(1, "power");
+            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Power\n", topic_pub_switch);
+        }
+        else if (cmd == "type")
+        {
+            MQTT_GetMsgType(doc);
+            MQTT_Response_Switch(1, "type");
+            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Type\n", topic_pub_switch);
+        }
+        else if (cmd == "pinout")
+        {
+            MQTT_GetMsgPinout(doc);
+            MQTT_Response_OutputSwitch(1, 1, 1, 0, 1);
+            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Output\n", topic_pub_switch);
+        }
     }
-    // else if (!strcmp(cmd, "power"))
-    // {
-    //     MQTT_Response_PowerSwitch(1);
-    // }
-    // else if (!strcmp(cmd, "output"))
-    // {
-    //     MQTT_Response_OutputSwitch(1, 1, 1, 0, 1);
-    // }
-    DB_DEBUG("SW: %d, CMD: %s\n", sensor, cmd);
+    else if (topic_value == String(topic_sub_wireless))
+    {
+        if (cmd == "set")
+        {
+            MQTT_GetInfoWireless(doc);
+            MQTT_Response_SetConfigWireless(1);
+            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Set Config Wireless\n", topic_pub_wireless);
+        }
+        else if (cmd == "get")
+        {
+            MQTT_Response_GetInfoWireless(1);
+            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Get Info Wireless\n", topic_pub_wireless);
+        }
+    }
+
+    DB_DEBUG("SW: %d, CMD: %s, TOPIC: %s\n", switch_number, cmd, topic_value);
+}
+
+static void MQTT_GetMsgPress(JsonDocument &doc)
+{
+    int arraySize = doc["servo"].size();
+    for (int i = 0; i < arraySize; i++)
+    {
+        mqtt_switch_press.servo[i] = doc["servo"][i];
+    }
+    mqtt_switch_press.time = doc["time"];
+    mqtt_switch_press.wait = doc["wait"];
+    mqtt_switch_press.keep = doc["keep"];
+    mqtt_switch_press.flag = 1;
+}
+
+static void MQTT_GetMsgPower(JsonDocument &doc)
+{
+    String cmd = doc["status"];
+    if (cmd == "on")
+    {
+        mqtt_switch_power.status = 1;
+    }
+    else if (cmd == "off")
+    {
+        mqtt_switch_power.status = 0;
+    }
+    mqtt_switch_power.flag = 1;
+}
+
+static void MQTT_GetMsgType(JsonDocument &doc)
+{
+    mqtt_switch_type.type = doc["type"];
+    mqtt_switch_type.flag = 1;
+}
+
+static void MQTT_GetMsgPinout(JsonDocument &doc)
+{
+    int arraySize = doc["pinout"].size();
+    for (int i = 0; i < arraySize; i++)
+    {
+        mqtt_switch_pinout.pinout[i] = doc["pinout"][i];
+    }
+    mqtt_switch_pinout.flag = 1;
+}
+
+static void MQTT_GetInfoWireless(JsonDocument &doc)
+{
+    eeprom_data.mqtt_port = doc["port"];
+    for (int i = 0; i < sizeof(eeprom_data.wifi_ssid); i++)
+    {
+        eeprom_data.wifi_ssid[i] = 0;
+        eeprom_data.wifi_pass[i] = 0;
+        eeprom_data.mqtt_broker[i] = 0;
+        eeprom_data.mqtt_username[i] = 0;
+        eeprom_data.mqtt_password[i] = 0;
+    }
+    String data_ssid = doc["ssid"];
+    memcpy(eeprom_data.wifi_ssid, data_ssid.c_str(), data_ssid.length());
+
+    String data_pass = doc["pass"];
+    memcpy(eeprom_data.wifi_pass, data_pass.c_str(), data_pass.length());
+
+    String data_broker = doc["host"];
+    memcpy(eeprom_data.mqtt_broker, data_broker.c_str(), data_broker.length());
+
+    String data_username = doc["username"];
+    memcpy(eeprom_data.mqtt_username, data_username.c_str(), data_username.length());
+
+    String data_password = doc["password"];
+    memcpy(eeprom_data.mqtt_password, data_password.c_str(), data_password.length());
+    mqtt_flag_config = true;
 }
