@@ -8,7 +8,7 @@
 #include "get_message.h"
 #include "frame_message.h"
 
-#define CREATE_MESSAGE_TEST 3
+#define CREATE_MESSAGE_TEST 4
 
 uint16_t lenght_msg = 0, count_time_1ms = 0;
 hw_timer_t *my_timer = NULL;
@@ -27,12 +27,13 @@ void setup()
   EEPROM_Init();
   Serial.begin(115200);
   delay(1000);
-  EEPROM_TestRead();
+  // EEPROM_CreateEEprom(1);
+  EEPROM_Print();
   if (eeprom_data.create_data != 123)
   {
-    EEPROM_CreateEeprom();
+    EEPROM_CreateEEprom(1);
     delay(500);
-    EEPROM_TestRead();
+    EEPROM_Print();
   }
   delay(1000);
   flag_wifi_connect = WIFI_Connect();
@@ -77,7 +78,7 @@ void loop()
           Get_MessageControlServo(dataout, &servo_control);
           DB_DEBUG("(MAIN) SV1: %d, SV2: %d, SV3: %d, SV4: %d \n", servo_control.servo1_control, servo_control.servo2_control, servo_control.servo3_control, servo_control.servo4_control);
         }
-        EEPROM_TestRead();
+        EEPROM_Print();
       }
     }
     if (flag_wifi_connect != DB_FUNC_ERROR)
@@ -94,6 +95,8 @@ void loop()
 
   if (mqtt_switch_press.flag == true)
   {
+    DB_DEBUG("(MAIN.c) Servo: %d, %d, %d, %d\n", mqtt_switch_press.servo[0], mqtt_switch_press.servo[1], mqtt_switch_press.servo[2], mqtt_switch_press.servo[3]);
+    DB_DEBUG("(MAIN.c) Time: %d, wait: %d, keep: %d,\n", mqtt_switch_press.time, mqtt_switch_press.wait, mqtt_switch_press.keep);
     mqtt_switch_press.flag = false;
     if (mqtt_switch_press.servo[0] == 1)
     {
@@ -135,9 +138,6 @@ void loop()
       servo4_value.time = mqtt_switch_press.time;
       servo4_value.wait = mqtt_switch_press.wait;
     }
-
-    DB_DEBUG("(MAIN.c) Servo: %d, %d, %d, %d\n", mqtt_switch_press.servo[0], mqtt_switch_press.servo[1], mqtt_switch_press.servo[2], mqtt_switch_press.servo[3]);
-    DB_DEBUG("(MAIN.c) Time: %d, wait: %d, keep: %d,\n", mqtt_switch_press.time, mqtt_switch_press.wait, mqtt_switch_press.keep);
   }
 
   if (mqtt_switch_power.flag == true)
@@ -156,6 +156,7 @@ void loop()
   {
     mqtt_switch_pinout.flag = false;
     DB_DEBUG("(MAIN.c) Pinout: %d, %d, %d, %d\n", mqtt_switch_pinout.pinout[0], mqtt_switch_pinout.pinout[1], mqtt_switch_pinout.pinout[2], mqtt_switch_pinout.pinout[3]);
+    MQTT_Response_OutputSwitch(1, 1, 1, 0, 1);
   }
 
   if (mqtt_flag_config == true)
@@ -171,6 +172,7 @@ void loop()
     delay(1000);
     ESP.restart();
   }
+
   GPIO_ServoRun(servo1_value);
   GPIO_ServoRun(servo2_value);
   GPIO_ServoRun(servo3_value);
@@ -322,6 +324,42 @@ static void Create_MSGTest(void)
     Serial.print(" ");
     delay(10);
   }
+
+#elif CREATE_MESSAGE_TEST == 4
+  // uint8_t lenth_ssid = strlen("Ai-Photonic 2G");
+  // uint8_t lenth_pass = strlen("ptitlab@123");
+
+  uint8_t lenth_ssid = strlen("P702_2G");
+  uint8_t lenth_pass = strlen("nhanma25");
+
+  wifiConfigData_t data, *data_temp;
+  data.wifi_timeout = 20;
+  memcpy(data.wifi_ssid, "P702_2G", lenth_ssid);
+  memcpy(data.wifi_pass, "nhanma25", lenth_pass);
+
+  data.wifi_ssid[lenth_ssid] = 0;
+  data.wifi_pass[lenth_pass] = 0;
+
+  data_temp = &data;
+  length_arr = CreateMessage(TYPE_MSG_UPDATE_WIFI, sizeof(wifiConfigData_t), (uint8_t *)data_temp, arr_out);
+  Serial.println(length_arr);
+
+  for (int i = 0; i < length_arr; i++)
+  {
+    char buff[5];
+    if (arr_out[i] < 15)
+    {
+      sprintf(buff, "0%x", arr_out[i]);
+    }
+    else
+    {
+      sprintf(buff, "%x", arr_out[i]);
+    }
+    Serial.print(buff);
+    Serial.print(" ");
+    delay(10);
+  }
+
 #endif
 }
 

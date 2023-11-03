@@ -40,5 +40,5 @@ extern bool mqtt_flag_config;
 void MQTT_Run(void);
 void MQTT_Receive(char *datain, char *topic);
 void MQTT_Init(void (*callback)(char *, byte *, unsigned int));
-
+void MQTT_Response_OutputSwitch(uint8_t switch_id, uint8_t out1, uint8_t out2, uint8_t out3, uint8_t out4);
 #endif

@@ -50,12 +50,12 @@ typedef struct
 	uint8_t servo_numbers;
 	unsigned long time_last;
 } servoControlstate_t;
-
 extern servoControlstate_t servo1_value, servo2_value, servo3_value, servo4_value;
 
 void GPIO_Init(void);
 void GPIO_Button_ReadAll(void);
 void GPIO_Led_Control(uint8_t led_pin, uint8_t led_mode);
+void GPIO_CLQ_Read(uint8_t led_pin, uint8_t led_mode);
 
 void GPIO_ServoInitValue(servoControlstate_t &servo_value);
 void GPIO_ServoRun(servoControlstate_t &servo_value);

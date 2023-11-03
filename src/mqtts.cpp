@@ -29,7 +29,6 @@ static void MQTT_GetMsgType(JsonDocument &doc);
 static void MQTT_GetMsgPinout(JsonDocument &doc);
 /*switch pub*/
 static void MQTT_Response_Switch(uint8_t switch_id, char *cmd);
-static void MQTT_Response_OutputSwitch(uint8_t switch_id, uint8_t out1, uint8_t out2, uint8_t out3, uint8_t out4);
 
 /*switch sub*/
 static void MQTT_GetInfoWireless(JsonDocument &doc);
@@ -139,7 +138,7 @@ void MQTT_Response_GetInfoWireless(uint8_t switch_id)
     doc["password"] = eeprom_data.mqtt_password;
     sprintf(ip, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
     doc["ip"] = ip;
-    //serializeJsonPretty(doc, Serial);
+    // serializeJsonPretty(doc, Serial);
     serializeJson(doc, jsonChar);
     client.publish(topic_pub_wireless, jsonChar);
 }
@@ -182,8 +181,6 @@ void MQTT_Receive(char *datain, char *topic)
         else if (cmd == "pinout")
         {
             MQTT_GetMsgPinout(doc);
-            MQTT_Response_OutputSwitch(1, 1, 1, 0, 1);
-            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Output\n", topic_pub_switch);
         }
     }
     else if (topic_value == String(topic_sub_wireless))
