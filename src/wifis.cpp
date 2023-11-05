@@ -113,7 +113,7 @@ void WIFI_Ota_Init(void)
     /*use mdns for host name resolution*/
     if (!MDNS.begin(host_ota))
     { // http://esp32.local
-        Serial.println("Error setting up MDNS responder!");
+        DB_ERROR("Error setting up MDNS responder!");
         DB_ERROR("(wifis.c) Error setting up MDNS responder! \n");
     }
 

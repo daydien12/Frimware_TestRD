@@ -116,6 +116,29 @@ void ClearState(void)
     fsm_state = FSM_STATE_START;
 }
 
+void Get_MessageConfigMqtt(messageFrameMsg_t datain)
+{
+    EEPROM_ReadStruct(&eeprom_data);
+    mqttConfigData_t *mqtt_config_data;
+    mqtt_config_data = (mqttConfigData_t *)datain.Data;
+
+    for (int i = 0; i < sizeof(eeprom_data.mqtt_username); i++)
+    {
+        eeprom_data.mqtt_broker[i] = 0;
+        eeprom_data.mqtt_username[i] = 0;
+        eeprom_data.mqtt_password[i] = 0;
+    }
+    eeprom_data.mqtt_port = mqtt_config_data->mqtt_port;
+    memcpy(eeprom_data.mqtt_broker, mqtt_config_data->mqtt_broker, strlen(mqtt_config_data->mqtt_broker));
+    memcpy(eeprom_data.mqtt_username, mqtt_config_data->mqtt_username, strlen(mqtt_config_data->mqtt_username));
+    memcpy(eeprom_data.mqtt_password, mqtt_config_data->mqtt_password, strlen(mqtt_config_data->mqtt_password));
+    // DB_INFO("mqtt_port: %d, mqtt_broker: %s, mqtt_username: %s, mqtt_password: %s\n", mqtt_config_data->mqtt_port, mqtt_config_data->mqtt_broker, mqtt_config_data->mqtt_username, mqtt_config_data->mqtt_password);
+    EEPROM_WriteStruct(&eeprom_data);
+#if DB_GET_MESSAGE
+    DB_DEBUG("(Get_MSG) SSID: %s, PASS: %s, TimeOut: %d \n", wifi_config_data->wifi_ssid, wifi_config_data->wifi_pass, wifi_config_data->wifi_timeout);
+#endif
+}
+
 void Get_MessageConfigWifi(const messageFrameMsg_t datain)
 {
     EEPROM_ReadStruct(&eeprom_data);

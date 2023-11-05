@@ -7,16 +7,17 @@
 /*client\switch*/
 /*client\wireless*/
 
-const char *topic = "topic1";
-const char *topic_sub_switch = "host\\switch";
-const char *topic_pub_switch = "client\\switch";
+const char *topic_sub_switch = "host\\switch1";
+const char *topic_pub_switch = "client\\switch1";
 
-const char *topic_sub_wireless = "host\\wireless";
-const char *topic_pub_wireless = "client\\wireless";
+const char *topic_sub_wireless = "host\\wireless1";
+const char *topic_pub_wireless = "client\\wireless1";
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 bool mqtt_flag_config = false;
+uint8_t mqtt_disconnect_count = 10;
+
 mqttSwitchPress_t mqtt_switch_press;
 mqttSwitchPower_t mqtt_switch_power;
 mqttSwitchType_t mqtt_switch_type;
@@ -51,19 +52,27 @@ static void MQTT_Reconnect(void)
         if (client.connect(clientId.c_str(), eeprom_data.mqtt_username, eeprom_data.mqtt_password))
         {
             DB_INFO("(MQTTS.c)MQTT Connect: %s\n", (char *)eeprom_data.mqtt_broker);
-            // Once connected, publish an announcement...
-            client.publish(topic, "hello world!");
             // ... and resubscribe
             client.subscribe(topic_sub_switch);
             client.subscribe(topic_sub_wireless);
+            mqtt_disconnect_count = 10;
         }
         else
         {
-            DB_ERROR("(MQTTS.c)MQTT Connect failed, rc=: %s\n", (char *)eeprom_data.mqtt_broker);
-            DB_ERROR("(MQTTS.c)%d\n", client.state());
-            DB_ERROR("(MQTTS.c)try again in 5 seconds\n");
-            // Wait 5 seconds before retrying
-            delay(5000);
+            if (mqtt_disconnect_count > 1)
+            {
+                mqtt_disconnect_count--;
+                DB_ERROR("(MQTTS.c)MQTT Connect failed, rc=: %s\n", (char *)eeprom_data.mqtt_broker);
+                DB_ERROR("(MQTTS.c)%d\n", client.state());
+                DB_ERROR("(MQTTS.c)try again in %d\n", mqtt_disconnect_count);
+                // Wait 5 seconds before retrying
+                delay(1000);
+            }
+            else
+            {
+                mqtt_disconnect_count = 0;
+                break;
+            }
         }
     }
 }
@@ -76,11 +85,14 @@ void MQTT_Init(void (*callback)(char *, byte *, unsigned int))
 
 void MQTT_Run(void)
 {
-    if (!client.connected())
+    if (mqtt_disconnect_count > 0)
     {
-        MQTT_Reconnect();
+        if (!client.connected())
+        {
+            MQTT_Reconnect();
+        }
+        client.loop();
     }
-    client.loop();
 }
 
 void MQTT_Response_Switch(uint8_t switch_id, char *cmd)
@@ -150,55 +162,57 @@ void MQTT_Receive(char *datain, char *topic)
 
     if (error)
     {
-        Serial.print(F("deserializeJson() failed: "));
-        Serial.println(error.f_str());
+        DB_ERROR("deserializeJson() failed: %s", error.f_str());
         return;
     }
 
     int switch_number = doc["switch"];
     String cmd = doc["cmd"];
     String topic_value = String(topic);
-    if (topic_value == String(topic_sub_switch))
+    if (switch_number == eeprom_data.switch_number)
     {
-        if (cmd == "press")
-        {
-            MQTT_GetMsgPress(doc);
-            MQTT_Response_Switch(1, "press");
-            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Press\n", topic_pub_switch);
-        }
-        else if (cmd == "power")
-        {
-            MQTT_GetMsgPower(doc);
-            MQTT_Response_Switch(1, "power");
-            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Power\n", topic_pub_switch);
-        }
-        else if (cmd == "type")
-        {
-            MQTT_GetMsgType(doc);
-            MQTT_Response_Switch(1, "type");
-            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Type\n", topic_pub_switch);
-        }
-        else if (cmd == "pinout")
-        {
-            MQTT_GetMsgPinout(doc);
-        }
-    }
-    else if (topic_value == String(topic_sub_wireless))
-    {
-        if (cmd == "set")
-        {
-            MQTT_GetInfoWireless(doc);
-            MQTT_Response_SetConfigWireless(1);
-            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Set Config Wireless\n", topic_pub_wireless);
-        }
-        else if (cmd == "get")
-        {
-            MQTT_Response_GetInfoWireless(1);
-            DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Get Info Wireless\n", topic_pub_wireless);
-        }
-    }
 
-    DB_DEBUG("SW: %d, CMD: %s, TOPIC: %s\n", switch_number, cmd, topic_value);
+        if (topic_value == String(topic_sub_switch))
+        {
+            if (cmd == "press")
+            {
+                MQTT_GetMsgPress(doc);
+                MQTT_Response_Switch(eeprom_data.switch_number, "press");
+                DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Press\n", topic_pub_switch);
+            }
+            else if (cmd == "power")
+            {
+                MQTT_GetMsgPower(doc);
+                MQTT_Response_Switch(eeprom_data.switch_number, "power");
+                DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Power\n", topic_pub_switch);
+            }
+            else if (cmd == "type")
+            {
+                MQTT_GetMsgType(doc);
+                MQTT_Response_Switch(eeprom_data.switch_number, "type");
+                DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Type\n", topic_pub_switch);
+            }
+            else if (cmd == "pinout")
+            {
+                MQTT_GetMsgPinout(doc);
+            }
+        }
+        else if (topic_value == String(topic_sub_wireless))
+        {
+            if (cmd == "set")
+            {
+                MQTT_GetInfoWireless(doc);
+                MQTT_Response_SetConfigWireless(eeprom_data.switch_number);
+                DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Set Config Wireless\n", topic_pub_wireless);
+            }
+            else if (cmd == "get")
+            {
+                MQTT_Response_GetInfoWireless(eeprom_data.switch_number);
+                DB_DEBUG("(MQTTS.c) MQTT Pub to topic %s: Get Info Wireless\n", topic_pub_wireless);
+            }
+        }
+    }
+    DB_DEBUG("(MQTTS.c) SW: %d, CMD: %s, TOPIC: %s\n", switch_number, cmd, topic_value);
 }
 
 static void MQTT_GetMsgPress(JsonDocument &doc)

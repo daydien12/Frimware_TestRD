@@ -35,6 +35,14 @@ typedef struct
 
 typedef struct
 {
+    uint16_t mqtt_port;
+    char mqtt_broker[32];
+    char mqtt_username[32];
+    char mqtt_password[32];
+} mqttConfigData_t;
+
+typedef struct
+{
     uint16_t servo1_up;
     uint16_t servo1_down;
     uint16_t servo2_up;
@@ -57,6 +65,7 @@ uint16_t Is_Message(uint16_t *lenght);
 void Get_Message(uint8_t datain, uint8_t arr_message[]);
 
 void Get_MessageConfigWifi(messageFrameMsg_t datain);
+void Get_MessageConfigMqtt(messageFrameMsg_t datain);
 void Get_MessageConfigServo(messageFrameMsg_t datain);
 void Get_MessageControlServo(messageFrameMsg_t datain, servoControlData_t *dataout);
 #endif

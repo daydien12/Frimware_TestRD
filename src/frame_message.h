@@ -28,6 +28,7 @@ typedef enum
     TYPE_MSG_UPDATE_WIFI = 0x01,
     TYPE_MSG_UPDATE_SERVO = 0x02,
     TYPE_MSG_CONTROL_SERVO = 0x03,
+    TYPE_MSG_UPDATE_MQTT = 0x04,
 } typeMessage_e;
 
 int16_t DetectMessage(uint8_t *dataint, messageFrameMsg_t *dataout);

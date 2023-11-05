@@ -88,16 +88,16 @@ void EEPROM_CreateEEprom(uint16_t switch_number)
   eepromDataStruct_t data_in;
 
   data_in.create_data = 123;
-  data_in.servo1_up = 180;
+  data_in.servo1_up = 0;
   data_in.servo1_down = 180;
 
-  data_in.servo2_up = 180;
+  data_in.servo2_up = 0;
   data_in.servo2_down = 180;
 
-  data_in.servo3_up = 180;
+  data_in.servo3_up = 0;
   data_in.servo3_down = 180;
 
-  data_in.servo4_up = 180;
+  data_in.servo4_up = 0;
   data_in.servo4_down = 180;
 
   data_in.wifi_timeout = 10 * 10; // 50*100 = 5 seconds

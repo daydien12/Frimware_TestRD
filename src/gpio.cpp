@@ -5,6 +5,7 @@ Servo servo1, servo2, servo3, servo4;
 servoControlstate_t servo1_value, servo2_value, servo3_value, servo4_value;
 static void GPIO_LED_Init(void);
 static void GPIO_CLQ_Init(void);
+static void GPIO_Relay_Init(void);
 static void GPIO_Servo_Init(void);
 static void GPIO_Button_Init(void);
 static void GPIO_Button_Read(const uint8_t input_signal, gpio_ButtonState_t *button_var);
@@ -17,6 +18,7 @@ void GPIO_Init(void)
     GPIO_LED_Init();
     GPIO_CLQ_Init();
     GPIO_Servo_Init();
+    GPIO_Relay_Init();
     GPIO_Button_Init();
 }
 
@@ -40,6 +42,11 @@ static void GPIO_Servo_Init(void)
     GPIO_ServoInitValue(servo4_value);
 }
 
+static void GPIO_Relay_Init(void)
+{
+    pinMode(IO_RELAY, OUTPUT);
+}
+
 void GPIO_ServoInitValue(servoControlstate_t &servo_value)
 {
     servo_value.flag = 0;
@@ -58,10 +65,10 @@ void GPIO_Led_Control(uint8_t led_pin, uint8_t led_mode)
 
 static void GPIO_CLQ_Init(void)
 {
-    pinMode(IO_CLQ_1, INPUT_MODE);
-    pinMode(IO_CLQ_2, INPUT_MODE);
-    pinMode(IO_CLQ_3, INPUT_MODE);
-    pinMode(IO_CLQ_4, INPUT_MODE);
+    pinMode(IO_CLQ_1, INPUT);
+    pinMode(IO_CLQ_2, INPUT);
+    pinMode(IO_CLQ_3, INPUT);
+    pinMode(IO_CLQ_4, INPUT);
 }
 
 static void GPIO_Button_Init(void)
@@ -151,7 +158,6 @@ void GPIO_ServoRun(servoControlstate_t &servo_value)
         {
         case 0:
             servo_value.state = 1;
-
             Servo_ControlDown(servo_value.servo_numbers);
             servo_value.time_last = millis();
             break;
@@ -182,5 +188,16 @@ void GPIO_ServoRun(servoControlstate_t &servo_value)
         default:
             break;
         }
+    }
+}
+void GPIO_RelayControl(uint8_t mode)
+{
+    if (mode == 1)
+    {
+        digitalWrite(IO_RELAY, HIGH);
+    }
+    else
+    {
+        digitalWrite(IO_RELAY, LOW);
     }
 }
